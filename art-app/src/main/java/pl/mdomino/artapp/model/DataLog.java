@@ -1,6 +1,7 @@
 package pl.mdomino.artapp.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +11,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
+@Table(name = "data_logs")
 public class DataLog {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -24,6 +26,7 @@ public class DataLog {
     @Enumerated(EnumType.STRING)
     private Action action;
 
+    @NotNull(message = "File name cannot be null")
     @Column(name = "file_name", length = 255)
     private String fileName;
 

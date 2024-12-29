@@ -16,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final JvtAuthConverter jvtAuthConverter;
+    private final RequestFilter requestFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -35,6 +36,9 @@ public class SecurityConfig {
         http
                 .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        http.addFilterAfter(requestFilter, org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class);
+
 
         return http.build();
     }

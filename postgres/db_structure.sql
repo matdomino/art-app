@@ -50,7 +50,7 @@ CREATE TABLE Tags (
     tag_name VARCHAR(30) NOT NULL UNIQUE
 );
 
-CREATE TABLE ImageTags (
+CREATE TABLE Image_Tags (
     image_ID UUID NOT NULL,
     tag_ID UUID NOT NULL,
     PRIMARY KEY (image_ID, tag_ID),
@@ -58,7 +58,7 @@ CREATE TABLE ImageTags (
     FOREIGN KEY (tag_ID) REFERENCES Tags(tag_ID) ON DELETE CASCADE
 );
 
-CREATE TABLE DataLogs (
+CREATE TABLE Data_Logs (
     data_log_ID UUID PRIMARY KEY,
     admin_ID UUID NOT NULL,
     action VARCHAR(10) CHECK (action IN ('IMPORT', 'EXPORT')),
