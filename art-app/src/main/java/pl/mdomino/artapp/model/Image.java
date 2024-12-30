@@ -41,6 +41,9 @@ public class Image {
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 
+    @Column(name = "file_extension")
+    private String fileExtension;
+
     @ManyToMany
     @JoinTable(
             name = "ImageTags",
