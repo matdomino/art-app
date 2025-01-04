@@ -24,7 +24,8 @@ public class SecurityConfig {
                 .csrf()
                     .disable()
                 .authorizeHttpRequests()
-//                    .requestMatchers("/api/images/download/**").permitAll()
+                    .requestMatchers("/api/images/preview/**").permitAll()
+                    .requestMatchers("/api/images/random").permitAll()
                     .anyRequest()
                         .authenticated();
 

@@ -17,7 +17,6 @@ import java.util.UUID;
 @Table(name = "images")
 public class Image {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "image_ID")
     private UUID image_ID;
 
@@ -41,8 +40,8 @@ public class Image {
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 
-    @Column(name = "file_extension")
-    private String fileExtension;
+    @Column(name = "file_name")
+    private String fileName;
 
     @ManyToMany
     @JoinTable(

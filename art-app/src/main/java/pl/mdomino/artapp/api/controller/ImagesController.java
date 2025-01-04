@@ -1,6 +1,7 @@
 package pl.mdomino.artapp.api.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.User;
+import pl.mdomino.artapp.model.dto.ImageDTO;
 import pl.mdomino.artapp.repo.UserRepo;
 import pl.mdomino.artapp.service.ImageService;
 
@@ -37,57 +39,131 @@ public class ImagesController {
     }
 
     @PostMapping("/uploadimage")
-    public ResponseEntity<ApiResponse> uploadImage(@Valid @RequestParam("image") String imageJson, @RequestParam("file") MultipartFile file) {
-        try {
-            var authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
-                return ResponseEntity.status(401).body(new ApiResponse("Unauthorized: Unable to get user information."));
+    public ResponseEntity<ApiResponse> uploadImage(@Valid @RequestParam("image") String imageJson, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return ResponseEntity.status(401).body(new ApiResponse("Unauthorized: Unable to get user information."));
+        }
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        Image image = objectMapper.readValue(imageJson, Image.class);
+
+        var violations = validateImage(image);
+        if (!violations.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ApiResponse(String.join(", ", violations)));
+        }
+
+        UUID userUuid = UUID.fromString(jwt.getClaimAsString("sub"));
+
+        User author = userRepo.findById(userUuid)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
+
+        image.setAuthor(author);
+
+        String fileName = imageService.addImage(image, file);
+
+        return ResponseEntity.ok(new ApiResponse("Saved file as " + fileName));
+    }
+
+    @PutMapping("/editimage/{imageId}")
+    public ResponseEntity<?> editImage(
+            @PathVariable UUID imageId,
+            @RequestParam(value = "image", required = false) String imageJson,
+            @RequestParam(value = "file", required = false) MultipartFile file) throws JsonProcessingException, IllegalArgumentException {
+
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return ResponseEntity.status(401).body(new ApiResponse("Unauthorized: Unable to get user information."));
+        }
+
+        if (imageJson == null && file == null) {
+            return ResponseEntity.badRequest().body(new ApiResponse("At least one of 'image' or 'file' must be provided."));
+        }
+
+        UUID userUuid = UUID.fromString(jwt.getClaimAsString("sub"));
+
+        String newTitle = null;
+        String newDescription = null;
+
+        if (imageJson != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode imageNode = objectMapper.readTree(imageJson);
+
+            List<String> allowedFields = List.of("title", "description");
+            List<String> unknownFields = new ArrayList<>();
+            imageNode.fieldNames().forEachRemaining(field -> {
+                if (!allowedFields.contains(field)) {
+                    unknownFields.add(field);
+                }
+            });
+            if (!unknownFields.isEmpty()) {
+                return ResponseEntity.badRequest().body(new ApiResponse("Unknown fields: " + String.join(", ", unknownFields)));
             }
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            Image image = objectMapper.readValue(imageJson, Image.class);
+            newTitle = imageNode.has("title") ? imageNode.get("title").asText() : null;
+            newDescription = imageNode.has("description") ? imageNode.get("description").asText() : null;
 
-            var violations = validateImage(image);
+            Image tempImage = new Image();
+            tempImage.setTitle(newTitle);
+            tempImage.setDescription(newDescription);
+            var violations = validateImage(tempImage);
             if (!violations.isEmpty()) {
                 return ResponseEntity.badRequest().body(new ApiResponse(String.join(", ", violations)));
             }
-
-            UUID userUuid = UUID.fromString(jwt.getClaimAsString("sub"));
-
-            User author = userRepo.findById(userUuid)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
-
-            image.setAuthor(author);
-
-            String fileName = imageService.addImage(image, file);
-
-            return ResponseEntity.ok(new ApiResponse("Saved file as " + fileName));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(e.getMessage()));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
         }
+
+        String fileName = imageService.editImage(imageId, file, userUuid, newTitle, newDescription);
+
+        return ResponseEntity.ok(new ApiResponse("Saved modified file as " + fileName));
     }
 
-    @GetMapping("/download/{imageId}")
-    public ResponseEntity<?> getImage(@PathVariable UUID imageId) {
-        try {
-            Path imagePath = imageService.getImageFileById(imageId);
+    @GetMapping("/download/{imageName}")
+    public ResponseEntity<?> getImage(@PathVariable String imageName) throws IOException {
+        Path imagePath = imageService.getImageByFilePath(imageName);
 
-            byte[] imageContent = Files.readAllBytes(imagePath);
+        byte[] imageContent = Files.readAllBytes(imagePath);
 
-            String contentType = Files.probeContentType(imagePath);
+        String contentType = Files.probeContentType(imagePath);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"));
-            headers.setContentDispositionFormData("attachment", imagePath.getFileName().toString());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"));
+        headers.setContentDispositionFormData("attachment", imagePath.getFileName().toString());
 
-            return new ResponseEntity<>(imageContent, headers, HttpStatus.OK);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(e.getMessage()));
+        return new ResponseEntity<>(imageContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/preview/{imageName}")
+    public ResponseEntity<?> previewImage(@PathVariable String imageName) throws IOException {
+        Path imagePath = imageService.getImageByFilePath(imageName);
+
+        byte[] imageContent = Files.readAllBytes(imagePath);
+
+        String contentType = Files.probeContentType(imagePath);
+        if (contentType == null) {
+            contentType = "application/octet-stream";
         }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType));
+
+        return new ResponseEntity<>(imageContent, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("random")
+    public List<ImageDTO> getRandomImages() {
+        return imageService.getRandomImages();
+    }
+
+    @GetMapping("/search")
+    public List<Image> searchImages(
+            @RequestParam(required = false) String query,
+            @RequestParam(defaultValue = "uploadDate") String sortBy,
+            @RequestParam(defaultValue = "false") boolean ascending,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return imageService.searchImages(query, sortBy, ascending, page, size);
     }
 
     private List<String> validateImage(Image image) {

@@ -12,7 +12,9 @@ CREATE TABLE Images (
     description VARCHAR(500),
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    file_extension VARCHAR(5) CHECK (file_extension IN ('.png', '.jpg', '.jpeg', '.gif')),
+    file_name VARCHAR(41) NOT NULL CHECK (
+        file_name ~* '\.(png|jpg|jpeg|gif)$'
+    ),
     FOREIGN KEY (author_ID) REFERENCES Users(keycloak_ID) ON DELETE CASCADE
 );
 
