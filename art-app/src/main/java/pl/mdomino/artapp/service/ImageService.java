@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
+import pl.mdomino.artapp.model.User;
 import pl.mdomino.artapp.model.dto.ImageDTO;
 import pl.mdomino.artapp.repo.ImageRepo;
+import pl.mdomino.artapp.repo.UserRepo;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,16 +32,25 @@ public class ImageService {
     @Autowired
     private final ImageRepo imageRepo;
 
-    public ImageService(ImageRepo imageRepo, @Value("${file.upload-dir}") String fileUploadDir) {
+    @Autowired
+    private final UserRepo userRepo;
+
+    public ImageService(ImageRepo imageRepo, UserRepo userRepo, @Value("${file.upload-dir}") String fileUploadDir) {
         this.imageRepo = imageRepo;
+        this.userRepo = userRepo;
         this.fileUploadDir = Paths.get(fileUploadDir).normalize().toAbsolutePath();
     }
 
-    public String addImage(Image image, MultipartFile file) {
+    public String addImage(Image image, MultipartFile file, UUID userUuid) {
         try {
             if (file.isEmpty()) {
                 throw new IllegalArgumentException("File is empty");
             }
+
+            User author = userRepo.findById(userUuid)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
+
+            image.setAuthor(author);
 
             String originalFileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
             String extension = originalFileName.substring(originalFileName.lastIndexOf("."));

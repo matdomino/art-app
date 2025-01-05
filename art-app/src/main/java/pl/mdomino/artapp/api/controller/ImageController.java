@@ -28,12 +28,12 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("api/images")
-public class ImagesController {
+public class ImageController {
     private final ImageService imageService;
     private final UserRepo userRepo;
 
     @Autowired
-    public ImagesController(ImageService imageService, UserRepo userRepo) {
+    public ImageController(ImageService imageService, UserRepo userRepo) {
         this.imageService = imageService;
         this.userRepo = userRepo;
     }
@@ -55,12 +55,7 @@ public class ImagesController {
 
         UUID userUuid = UUID.fromString(jwt.getClaimAsString("sub"));
 
-        User author = userRepo.findById(userUuid)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
-
-        image.setAuthor(author);
-
-        String fileName = imageService.addImage(image, file);
+        String fileName = imageService.addImage(image, file, userUuid);
 
         return ResponseEntity.ok(new ApiResponse("Saved file as " + fileName));
     }
