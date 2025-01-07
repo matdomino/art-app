@@ -1,5 +1,6 @@
 package pl.mdomino.artapp.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -26,5 +27,6 @@ public class Tag {
     private String tagName;
 
     @ManyToMany(mappedBy = "tags")
+    @JsonBackReference
     private Set<Image> images = new HashSet<>();
 }
