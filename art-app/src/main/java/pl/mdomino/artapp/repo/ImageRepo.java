@@ -31,4 +31,17 @@ public interface ImageRepo extends JpaRepository<Image, UUID> {
             "WHERE t.tagName IN :tagNames " +
             "AND i.image_ID != :imageId")
     List<Image> findSimilarImagesByTags(@Param("tagNames") List<String> tagNames, @Param("imageId") UUID imageId);
+
+    @Query("SELECT i FROM Image i " +
+            "JOIN i.favorites f " +
+            "GROUP BY i.image_ID " +
+            "ORDER BY COUNT(f) DESC")
+    List<Image> findTopImagesByFavorites(@Param("limit") int limit);
+
+    @Query("SELECT i FROM Image i " +
+            "JOIN i.ratings r " +
+            "GROUP BY i.image_ID " +
+            "ORDER BY AVG(r.rating) DESC, COUNT(r) DESC")
+    List<Image> findTopImagesByRatings(@Param("limit") int limit);
+
 }

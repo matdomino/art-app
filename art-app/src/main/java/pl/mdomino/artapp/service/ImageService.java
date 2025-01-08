@@ -246,4 +246,45 @@ public class ImageService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getTopImagesByFavorites(int limit) {
+        List<Image> topImages = imageRepo.findTopImagesByFavorites(limit);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Image image : topImages) {
+            Map<String, Object> details = new HashMap<>();
+            details.put("image", image);
+
+            long favoriteCount = image.getFavorites().size();
+            details.put("favoriteCount", favoriteCount);
+
+            Double averageRating = ratingRepository.findAverageRatingByImageId(image.getImage_ID());
+            details.put("averageRating", averageRating);
+
+            result.add(details);
+        }
+
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getTopImagesByRatings(int limit) {
+        List<Image> topImages = imageRepo.findTopImagesByRatings(limit);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Image image : topImages) {
+            Map<String, Object> details = new HashMap<>();
+            details.put("image", image);
+
+            long favoriteCount = image.getFavorites().size();
+            details.put("favoriteCount", favoriteCount);
+
+            Double averageRating = ratingRepository.findAverageRatingByImageId(image.getImage_ID());
+            details.put("averageRating", averageRating);
+
+            result.add(details);
+        }
+
+        return result;
+    }
 }

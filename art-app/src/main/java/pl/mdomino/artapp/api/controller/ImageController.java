@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.dto.ImageDTO;
+import pl.mdomino.artapp.repo.ImageRepo;
 import pl.mdomino.artapp.repo.UserRepo;
 import pl.mdomino.artapp.service.ImageService;
 
@@ -197,5 +198,27 @@ public class ImageController {
         Image deletedImage = imageService.deleteImage(imageUuid, userUuid);
 
         return ResponseEntity.ok(new ApiResponse("Deleted image " + deletedImage.getTitle()));
+    }
+
+    @GetMapping("/top")
+    public ResponseEntity<List<Map<String, Object>>> getTopImages(
+            @RequestParam("sortBy") String sortBy,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        List<Map<String, Object>> topImages;
+
+        if (limit <= 0) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        if ("favourites".equalsIgnoreCase(sortBy)) {
+            topImages = imageService.getTopImagesByFavorites(limit);
+        } else if ("ratings".equalsIgnoreCase(sortBy)) {
+            topImages = imageService.getTopImagesByRatings(limit);
+        } else {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        return ResponseEntity.ok(topImages);
     }
 }
