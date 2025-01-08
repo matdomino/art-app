@@ -2,6 +2,7 @@ package pl.mdomino.artapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.mdomino.artapp.model.Favorite;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.User;
@@ -27,6 +28,7 @@ public class FavouriteService {
         this.userRepo = userRepo;
     }
 
+    @Transactional
     public Favorite addImageToFavorites(UUID imageUuid, UUID userUuid) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
@@ -50,6 +52,7 @@ public class FavouriteService {
         return favorite;
     }
 
+    @Transactional
     public void removeImageFromFavorites(UUID imageUuid, UUID userUuid) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
@@ -63,6 +66,7 @@ public class FavouriteService {
         favouriteRepo.delete(favorite);
     }
 
+    @Transactional(readOnly = true)
     public List<Favorite> getFavoritesForUser(UUID userUuid) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));

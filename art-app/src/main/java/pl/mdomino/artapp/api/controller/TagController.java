@@ -7,14 +7,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import pl.mdomino.artapp.model.Tag;
-import pl.mdomino.artapp.model.dto.TagDTO;
 import pl.mdomino.artapp.service.TagService;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/images")
+@RequestMapping("api/tags")
 public class TagController {
     private final TagService tagService;
 
@@ -23,7 +22,7 @@ public class TagController {
         this.tagService = tagService;
     }
 
-    @PostMapping("/{imageUuid}/addtag")
+    @PostMapping("/{imageUuid}/add")
     public ResponseEntity<ApiResponse> previewImage(@PathVariable UUID imageUuid, @Valid @RequestBody Tag tag) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
@@ -51,9 +50,9 @@ public class TagController {
         return ResponseEntity.ok(new ApiResponse("Removed " + tagName + " form image " + imageUuid));
     }
 
-    @GetMapping("/{imageUuid}/gettags")
-    public ResponseEntity<List<TagDTO>> getTags(@PathVariable UUID imageUuid) {
-        List<TagDTO> tags = tagService.getTagsByImageUuid(imageUuid);
+    @GetMapping("/{imageUuid}")
+    public ResponseEntity<List<Tag>> getTags(@PathVariable UUID imageUuid) {
+        List<Tag> tags = tagService.getTagsByImageUuid(imageUuid);
 
         return ResponseEntity.ok(tags);
     }

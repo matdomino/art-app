@@ -1,5 +1,6 @@
 package pl.mdomino.artapp.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import pl.mdomino.artapp.model.Image;
@@ -26,6 +27,7 @@ public class RatingService {
         this.userRepo = userRepo;
     }
 
+    @Transactional
     public Rating addOrUpdateRating(UUID imageId, UUID userUuid, Rating rating) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
@@ -46,12 +48,14 @@ public class RatingService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<Rating> getAllRatingsForImage(UUID imageId) {
         Image image = imageRepo.findById(imageId)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with ID: " + imageId));
         return ratingRepo.findByImage(image);
     }
 
+    @Transactional
     public Rating deleteRating(UUID imageId, UUID userUuid) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));

@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
-import pl.mdomino.artapp.model.User;
 import pl.mdomino.artapp.model.dto.ImageDTO;
 import pl.mdomino.artapp.repo.UserRepo;
 import pl.mdomino.artapp.service.ImageService;
@@ -39,7 +38,7 @@ public class ImageController {
         this.userRepo = userRepo;
     }
 
-    @PostMapping("/uploadimage")
+    @PostMapping("/upload")
     public ResponseEntity<ApiResponse> uploadImage(@Valid @RequestParam("image") String imageJson, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
@@ -61,8 +60,8 @@ public class ImageController {
         return ResponseEntity.ok(new ApiResponse("Saved file as " + fileName));
     }
 
-    @PutMapping("/editimage/{imageId}")
-    public ResponseEntity<?> editImage(
+    @PutMapping("/{imageId}/edit")
+    public ResponseEntity<ApiResponse> editImage(
             @PathVariable UUID imageId,
             @RequestParam(value = "image", required = false) String imageJson,
             @RequestParam(value = "file", required = false) MultipartFile file) throws JsonProcessingException, IllegalArgumentException {
@@ -146,7 +145,7 @@ public class ImageController {
         return new ResponseEntity<>(imageContent, headers, HttpStatus.OK);
     }
 
-    @GetMapping("random")
+    @GetMapping("/random")
     public List<ImageDTO> getRandomImages() {
         return imageService.getRandomImages();
     }
@@ -163,7 +162,7 @@ public class ImageController {
     }
 
     @GetMapping("/{imageUuid}/getdetails")
-    public ResponseEntity<?> getImageDetails(@PathVariable UUID imageUuid) {
+    public ResponseEntity<Map<String, Object>> getImageDetails(@PathVariable UUID imageUuid) {
         Map<String, Object> imageDetails = imageService.getImageDetails(imageUuid);
 
         return ResponseEntity.ok(imageDetails);
@@ -184,5 +183,19 @@ public class ImageController {
     public ResponseEntity<List<ImageDTO>> getImageSuggestions(@PathVariable UUID imageUuid) {
         List<ImageDTO> suggestions = imageService.getSuggestions(imageUuid);
         return ResponseEntity.ok(suggestions);
+    }
+
+    @DeleteMapping("/{imageUuid}/delete")
+    public ResponseEntity<ApiResponse> deleteImage(@PathVariable UUID imageUuid) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            return ResponseEntity.status(401).body(new ApiResponse("Unauthorized: Unable to get user information."));
+        }
+
+        UUID userUuid = UUID.fromString(jwt.getClaimAsString("sub"));
+
+        Image deletedImage = imageService.deleteImage(imageUuid, userUuid);
+
+        return ResponseEntity.ok(new ApiResponse("Deleted image " + deletedImage.getTitle()));
     }
 }

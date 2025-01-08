@@ -6,10 +6,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
-import pl.mdomino.artapp.model.Rating;
 import pl.mdomino.artapp.model.Tag;
 import pl.mdomino.artapp.model.User;
 import pl.mdomino.artapp.model.dto.ImageDTO;
@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 @Service
 public class ImageService {
     private final Path fileUploadDir;
-
     private final ImageRepo imageRepo;
     private final RatingRepo ratingRepository;
     private final UserRepo userRepo;
@@ -41,6 +40,7 @@ public class ImageService {
         this.fileUploadDir = Paths.get(fileUploadDir).normalize().toAbsolutePath();
     }
 
+    @Transactional
     public String addImage(Image image, MultipartFile file, UUID userUuid) {
         try {
             if (file.isEmpty()) {
@@ -72,13 +72,12 @@ public class ImageService {
 
             return fileName;
 
-        } catch (IllegalArgumentException e) {
-            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Unexpected error occurred", e);
         }
     }
 
+    @Transactional
     public String editImage(UUID imageId, MultipartFile file, UUID userUuid, String newTitle, String newDescription) {
         try {
             Image image = imageRepo.findById(imageId)
@@ -130,13 +129,12 @@ public class ImageService {
 
             return fileName;
 
-        } catch (IllegalArgumentException e) {
-            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Unexpected error occurred", e);
         }
     }
 
+    @Transactional(readOnly = true)
     public List<Image> searchImages(String query, String sortBy, boolean ascending, int page, int size) {
         List<String> allowedSortFields = Arrays.asList("title", "description", "uploadDate", "updateDate", "fileName", "author.username");
 
@@ -159,6 +157,7 @@ public class ImageService {
         return imagesPage.getContent();
     }
 
+    @Transactional(readOnly = true)
     public List<ImageDTO> getRandomImages() {
         return imageRepo.findRandomImages()
                 .stream()
@@ -166,6 +165,7 @@ public class ImageService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Path getImageByFilePath(String fileName) {
         Path filePath = fileUploadDir.resolve(fileName);
 
@@ -176,6 +176,7 @@ public class ImageService {
         return fileUploadDir.resolve(fileName);
     }
 
+    @Transactional(readOnly = true)
     public Map<String, Object> getImageDetails(UUID imageId) {
         Image image = imageRepo.findById(imageId)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with the given ID"));
@@ -192,6 +193,7 @@ public class ImageService {
         return details;
     }
 
+    @Transactional(readOnly = true)
     public List<ImageDTO> getSuggestions(UUID imageId) {
         Image image = imageRepo.findById(imageId)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with the given ID"));
@@ -214,4 +216,34 @@ public class ImageService {
                 .map(img -> new ImageDTO(img.getImage_ID(), img.getTitle(), img.getDescription()))
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public Image deleteImage(UUID imageId, UUID userUuid) {
+        try {
+            Image image = imageRepo.findById(imageId)
+                    .orElseThrow(() -> new IllegalArgumentException("Image not found with the given ID"));
+
+            if (!userUuid.equals(image.getAuthor().getKeycloakID())) {
+                throw new IllegalArgumentException("User is not authorized to delete this image.");
+            }
+
+            String fileName = image.getFileName();
+            if (fileName != null) {
+                Path filePath = fileUploadDir.resolve(fileName);
+                try {
+                    Files.delete(filePath);
+                } catch (IOException e) {
+                    throw new RuntimeException("Error deleting the file: " + e.getMessage(), e);
+                }
+            }
+
+            imageRepo.delete(image);
+
+            return image;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error occurred during image deletion", e);
+        }
+    }
+
 }

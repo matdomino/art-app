@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/images")
+@RequestMapping("api/ratings")
 public class RatingController {
     private final RatingService ratingService;
 
@@ -36,14 +36,14 @@ public class RatingController {
         return ResponseEntity.ok(new ApiResponse("Rated image: " + imageUuid + " rating: " + savedRating.getRatingID()));
     }
 
-    @GetMapping("/{imageUuid}/ratings")
+    @GetMapping("/{imageUuid}")
     public ResponseEntity<List<Rating>> getRatings(@PathVariable UUID imageUuid) {
         List<Rating> ratings = ratingService.getAllRatingsForImage(imageUuid);
 
         return ResponseEntity.ok(ratings);
     }
 
-    @DeleteMapping("/{imageUuid}/deleterating")
+    @DeleteMapping("/{imageUuid}/delete")
     public ResponseEntity<ApiResponse> deleteRating(@PathVariable UUID imageUuid) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {

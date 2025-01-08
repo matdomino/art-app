@@ -18,7 +18,7 @@ public class User {
     @Column(name = "keycloak_ID", unique = true, nullable = false)
     private UUID keycloakID;
 
-    @NotNull(message = "Username cannot be null")
+    @NotNull
     @Size(min = 4, max = 20, message = "Username must be between 4 and 20 characters")
     @Column(name = "username", length = 20, nullable = false)
     private String username;

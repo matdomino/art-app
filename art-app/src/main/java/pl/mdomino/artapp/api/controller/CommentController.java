@@ -2,41 +2,34 @@ package pl.mdomino.artapp.api.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import pl.mdomino.artapp.model.Comment;
-import pl.mdomino.artapp.repo.ImageRepo;
-import pl.mdomino.artapp.repo.UserRepo;
 import pl.mdomino.artapp.service.CommentService;
 
 import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/images")
+@RequestMapping("api/comments")
 public class CommentController {
     private final CommentService commentService;
-    private final UserRepo userRepo;
-    private final ImageRepo imageRepo;
 
     @Autowired
-    public CommentController(CommentService commentService, UserRepo userRepo, ImageRepo imageRepo) {
+    public CommentController(CommentService commentService) {
         this.commentService = commentService;
-        this.userRepo = userRepo;
-        this.imageRepo = imageRepo;
     }
 
-    @GetMapping("/{imageUuid}/getcomments")
+    @GetMapping("/{imageUuid}")
     public ResponseEntity<List<Comment>> getComments(@PathVariable UUID imageUuid) {
         List<Comment> comments = commentService.getComments(imageUuid);
 
         return ResponseEntity.ok(comments);
     }
 
-    @PostMapping("/{imageUuid}/addcomment")
+    @PostMapping("/{imageUuid}/add")
     public ResponseEntity<ApiResponse> addComment(@Valid @RequestBody Comment comment, @PathVariable UUID imageUuid) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
@@ -50,7 +43,7 @@ public class CommentController {
         return ResponseEntity.ok(new ApiResponse("Comment added successfully with ID: " + commentId));
     }
 
-    @PutMapping("/editcomment/{commentUuid}")
+    @PutMapping("/{commentUuid}/edit")
     public ResponseEntity<ApiResponse> editcomment(@Valid @RequestBody Comment comment, @PathVariable UUID commentUuid) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
@@ -64,7 +57,7 @@ public class CommentController {
         return ResponseEntity.ok(new ApiResponse("Comment " + commentId + " modified successfully"));
     }
 
-    @DeleteMapping("/deletecomment/{commentUuid}")
+    @DeleteMapping("/{commentUuid}/delete")
     public ResponseEntity<ApiResponse> deleteComment(@PathVariable UUID commentUuid) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {

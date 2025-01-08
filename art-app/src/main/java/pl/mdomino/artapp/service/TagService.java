@@ -5,12 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.Tag;
-import pl.mdomino.artapp.model.dto.TagDTO;
 import pl.mdomino.artapp.repo.ImageRepo;
 import pl.mdomino.artapp.repo.TagRepo;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class TagService {
@@ -72,16 +70,10 @@ public class TagService {
     }
 
     @Transactional(readOnly = true)
-    public List<TagDTO> getTagsByImageUuid(UUID imageUuid) {
+    public List<Tag> getTagsByImageUuid(UUID imageUuid) {
         Image image = imageRepo.findById(imageUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with UUID: " + imageUuid));
 
-        return image.getTags().stream()
-                .map(tag -> {
-                    TagDTO tagDTO = new TagDTO();
-                    tagDTO.setTagID(tag.getTagID());
-                    tagDTO.setTagName(tag.getTagName());
-                    return tagDTO;
-                }).collect(Collectors.toList());
+        return new ArrayList<>(image.getTags());
     }
 }

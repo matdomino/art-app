@@ -2,6 +2,7 @@ package pl.mdomino.artapp.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.mdomino.artapp.model.Comment;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.User;
@@ -15,21 +16,18 @@ import java.util.UUID;
 
 @Service
 public class CommentService {
-    @Autowired
     private final CommentRepo commentRepo;
-
-    @Autowired
     private final UserRepo userRepo;
-
-    @Autowired
     private final ImageRepo imageRepo;
 
+    @Autowired
     public CommentService(CommentRepo commentRepo, UserRepo userRepo, ImageRepo imageRepo) {
         this.commentRepo = commentRepo;
         this.userRepo = userRepo;
         this.imageRepo = imageRepo;
     }
 
+    @Transactional(readOnly = true)
     public List<Comment> getComments(UUID imageUuid) {
         Image image = imageRepo.findById(imageUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with UUID: " + imageUuid));
@@ -37,6 +35,7 @@ public class CommentService {
         return commentRepo.findByImage(image);
     }
 
+    @Transactional
     public UUID addComment(Comment comment, UUID userUuid, UUID imageUuid) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
@@ -53,6 +52,7 @@ public class CommentService {
         return savedComment.getCommentID();
     }
 
+    @Transactional
     public UUID editComment(Comment comment, UUID userUuid, UUID commentUuid) {
         Comment oldComment = commentRepo.findById(commentUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found with UUID: " + commentUuid));
@@ -68,6 +68,7 @@ public class CommentService {
         return oldComment.getCommentID();
     }
 
+    @Transactional
     public UUID deleteComment(UUID commentUuid, UUID userUuid) {
         Comment comment = commentRepo.findById(commentUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Comment not found with UUID: " + commentUuid));
