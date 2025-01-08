@@ -64,8 +64,9 @@ public class TagService {
         if (image.getTags().contains(tag)) {
             image.getTags().remove(tag);
             imageRepo.save(image);
+        } else {
+            throw new IllegalArgumentException("There is no tag with name: " + tagName);
         }
-
         return tagName;
     }
 

@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.dto.ImageDTO;
-import pl.mdomino.artapp.repo.ImageRepo;
-import pl.mdomino.artapp.repo.UserRepo;
 import pl.mdomino.artapp.service.ImageService;
 
 import java.io.IOException;
@@ -31,12 +29,10 @@ import java.util.UUID;
 @RequestMapping("api/images")
 public class ImageController {
     private final ImageService imageService;
-    private final UserRepo userRepo;
 
     @Autowired
-    public ImageController(ImageService imageService, UserRepo userRepo) {
+    public ImageController(ImageService imageService) {
         this.imageService = imageService;
-        this.userRepo = userRepo;
     }
 
     @PostMapping("/upload")
@@ -169,17 +165,6 @@ public class ImageController {
         return ResponseEntity.ok(imageDetails);
     }
 
-    private List<String> validateImage(Image image) {
-        List<String> errors = new ArrayList<>();
-        if (image.getTitle() == null || image.getTitle().isEmpty()) {
-            errors.add("Title cannot be null or empty.");
-        }
-        if (image.getTitle() != null && (image.getTitle().length() < 1 || image.getTitle().length() > 255)) {
-            errors.add("Title must be between 1 and 255 characters.");
-        }
-        return errors;
-    }
-
     @GetMapping("/{imageUuid}/suggestions")
     public ResponseEntity<List<ImageDTO>> getImageSuggestions(@PathVariable UUID imageUuid) {
         List<ImageDTO> suggestions = imageService.getSuggestions(imageUuid);
@@ -220,5 +205,16 @@ public class ImageController {
         }
 
         return ResponseEntity.ok(topImages);
+    }
+
+    private List<String> validateImage(Image image) {
+        List<String> errors = new ArrayList<>();
+        if (image.getTitle() == null || image.getTitle().isEmpty()) {
+            errors.add("Title cannot be null or empty.");
+        }
+        if (image.getTitle() != null && (image.getTitle().length() < 1 || image.getTitle().length() > 255)) {
+            errors.add("Title must be between 1 and 255 characters.");
+        }
+        return errors;
     }
 }
