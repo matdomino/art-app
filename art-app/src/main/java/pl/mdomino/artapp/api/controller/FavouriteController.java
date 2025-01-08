@@ -13,15 +13,15 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("api/images")
-public class FavoriteController {
+public class FavouriteController {
     private final FavouriteService favouriteService;
 
     @Autowired
-    public FavoriteController(FavouriteService favouriteService) {
+    public FavouriteController(FavouriteService favouriteService) {
         this.favouriteService = favouriteService;
     }
 
-    @PostMapping("/{imageUuid}/addtofavorite")
+    @PostMapping("/{imageUuid}/addtofavourite")
     public ResponseEntity<ApiResponse> addImageToFavorites(@PathVariable UUID imageUuid) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
@@ -35,7 +35,7 @@ public class FavoriteController {
         return ResponseEntity.ok(new ApiResponse("Added image to favorites:" + favorite.getPreferenceID()));
     }
 
-    @DeleteMapping("/{imageUuid}/removefromfavorite")
+    @DeleteMapping("/{imageUuid}/removefromfavourite")
     public ResponseEntity<ApiResponse> removeImageFromFavorites(@PathVariable UUID imageUuid) {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {
@@ -49,7 +49,7 @@ public class FavoriteController {
         return ResponseEntity.ok(new ApiResponse("Removed image from favorites."));
     }
 
-    @GetMapping("/favorites")
+    @GetMapping("/favourites")
     public ResponseEntity<List<Favorite>> getFavoritesForUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !(authentication.getPrincipal() instanceof Jwt jwt)) {

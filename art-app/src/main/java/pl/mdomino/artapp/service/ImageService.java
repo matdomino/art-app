@@ -9,9 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import pl.mdomino.artapp.model.Image;
+import pl.mdomino.artapp.model.Rating;
+import pl.mdomino.artapp.model.Tag;
 import pl.mdomino.artapp.model.User;
 import pl.mdomino.artapp.model.dto.ImageDTO;
 import pl.mdomino.artapp.repo.ImageRepo;
+import pl.mdomino.artapp.repo.RatingRepo;
 import pl.mdomino.artapp.repo.UserRepo;
 
 import java.io.IOException;
@@ -19,25 +22,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class ImageService {
     private final Path fileUploadDir;
 
-    @Autowired
     private final ImageRepo imageRepo;
-
-    @Autowired
+    private final RatingRepo ratingRepository;
     private final UserRepo userRepo;
 
-    public ImageService(ImageRepo imageRepo, UserRepo userRepo, @Value("${file.upload-dir}") String fileUploadDir) {
+    @Autowired
+    public ImageService(ImageRepo imageRepo, UserRepo userRepo, RatingRepo ratingRepository, @Value("${file.upload-dir}") String fileUploadDir) {
         this.imageRepo = imageRepo;
         this.userRepo = userRepo;
+        this.ratingRepository = ratingRepository;
         this.fileUploadDir = Paths.get(fileUploadDir).normalize().toAbsolutePath();
     }
 
@@ -174,5 +174,44 @@ public class ImageService {
         }
 
         return fileUploadDir.resolve(fileName);
+    }
+
+    public Map<String, Object> getImageDetails(UUID imageId) {
+        Image image = imageRepo.findById(imageId)
+                .orElseThrow(() -> new IllegalArgumentException("Image not found with the given ID"));
+
+        Double averageRating = ratingRepository.findAverageRatingByImageId(imageId);
+
+        long favoriteCount = image.getFavorites().size();
+
+        Map<String, Object> details = new HashMap<>();
+        details.put("image", image);
+        details.put("averageRating", averageRating);
+        details.put("favoriteCount", favoriteCount);
+
+        return details;
+    }
+
+    public List<ImageDTO> getSuggestions(UUID imageId) {
+        Image image = imageRepo.findById(imageId)
+                .orElseThrow(() -> new IllegalArgumentException("Image not found with the given ID"));
+
+        Set<Tag> imageTags = image.getTags();
+
+        if (imageTags.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> tagNames = imageTags.stream()
+                .map(Tag::getTagName)
+                .collect(Collectors.toList());
+
+        List<Image> similarImages = imageRepo.findSimilarImagesByTags(tagNames, imageId);
+
+        Collections.shuffle(similarImages);
+        return similarImages.stream()
+                .limit(5)
+                .map(img -> new ImageDTO(img.getImage_ID(), img.getTitle(), img.getDescription()))
+                .collect(Collectors.toList());
     }
 }

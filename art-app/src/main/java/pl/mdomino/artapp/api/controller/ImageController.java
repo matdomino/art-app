@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -161,6 +162,13 @@ public class ImageController {
         return imageService.searchImages(query, sortBy, ascending, page, size);
     }
 
+    @GetMapping("/{imageUuid}/getdetails")
+    public ResponseEntity<?> getImageDetails(@PathVariable UUID imageUuid) {
+        Map<String, Object> imageDetails = imageService.getImageDetails(imageUuid);
+
+        return ResponseEntity.ok(imageDetails);
+    }
+
     private List<String> validateImage(Image image) {
         List<String> errors = new ArrayList<>();
         if (image.getTitle() == null || image.getTitle().isEmpty()) {
@@ -170,5 +178,11 @@ public class ImageController {
             errors.add("Title must be between 1 and 255 characters.");
         }
         return errors;
+    }
+
+    @GetMapping("/{imageUuid}/suggestions")
+    public ResponseEntity<List<ImageDTO>> getImageSuggestions(@PathVariable UUID imageUuid) {
+        List<ImageDTO> suggestions = imageService.getSuggestions(imageUuid);
+        return ResponseEntity.ok(suggestions);
     }
 }

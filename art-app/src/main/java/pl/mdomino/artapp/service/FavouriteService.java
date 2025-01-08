@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import pl.mdomino.artapp.model.Favorite;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.User;
-import pl.mdomino.artapp.repo.FavoriteRepo;
+import pl.mdomino.artapp.repo.FavouriteRepo;
 import pl.mdomino.artapp.repo.ImageRepo;
 import pl.mdomino.artapp.repo.UserRepo;
 
@@ -16,13 +16,13 @@ import java.util.UUID;
 
 @Service
 public class FavouriteService {
-    private final FavoriteRepo favoriteRepo;
+    private final FavouriteRepo favouriteRepo;
     private final ImageRepo imageRepo;
     private final UserRepo userRepo;
 
     @Autowired
-    public FavouriteService(FavoriteRepo favoriteRepo, ImageRepo imageRepo, UserRepo userRepo) {
-        this.favoriteRepo = favoriteRepo;
+    public FavouriteService(FavouriteRepo favouriteRepo, ImageRepo imageRepo, UserRepo userRepo) {
+        this.favouriteRepo = favouriteRepo;
         this.imageRepo = imageRepo;
         this.userRepo = userRepo;
     }
@@ -34,7 +34,7 @@ public class FavouriteService {
         Image image = imageRepo.findById(imageUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with ID: " + imageUuid));
 
-        Optional<Favorite> existingFavorite = favoriteRepo.findByUserAndImage(author, image);
+        Optional<Favorite> existingFavorite = favouriteRepo.findByUserAndImage(author, image);
 
         if (existingFavorite.isPresent()) {
             throw new IllegalArgumentException("Image is already in favorites for user: " + userUuid);
@@ -45,7 +45,7 @@ public class FavouriteService {
         favorite.setUser(author);
         favorite.setCreateDate(LocalDateTime.now());
 
-        favoriteRepo.save(favorite);
+        favouriteRepo.save(favorite);
 
         return favorite;
     }
@@ -57,17 +57,17 @@ public class FavouriteService {
         Image image = imageRepo.findById(imageUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Image not found with ID: " + imageUuid));
 
-        Favorite favorite = favoriteRepo.findByUserAndImage(author, image)
+        Favorite favorite = favouriteRepo.findByUserAndImage(author, image)
                 .orElseThrow(() -> new IllegalArgumentException("Image is not in favorites for user: " + userUuid));
 
-        favoriteRepo.delete(favorite);
+        favouriteRepo.delete(favorite);
     }
 
     public List<Favorite> getFavoritesForUser(UUID userUuid) {
         User author = userRepo.findById(userUuid)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with UUID: " + userUuid));
 
-        return favoriteRepo.findAllByUser(author);
+        return favouriteRepo.findAllByUser(author);
     }
 }
 

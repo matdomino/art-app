@@ -1,5 +1,6 @@
 package pl.mdomino.artapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -7,9 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Setter
 @Getter
@@ -50,6 +49,14 @@ public class Image {
             inverseJoinColumns = @JoinColumn(name = "tag_ID")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Rating> ratings = new ArrayList<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "image", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
 
     @PreUpdate
     public void preUpdate() {

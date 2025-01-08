@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface FavoriteRepo extends JpaRepository<Favorite, UUID> {
+public interface FavouriteRepo extends JpaRepository<Favorite, UUID> {
     Optional<Favorite> findByUserAndImage(User user, Image image);
 
     List<Favorite> findAllByUser(User user);
