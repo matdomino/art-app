@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Galeria</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<h1>Losowe Obrazy</h1>
+<div>
+    <ul>
+        <li th:each="image : ${randomImages}">
+            <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image.fileName}}" alt="${image.fileName}">
+            <h3 th:text="${image.title}">Tytuł obrazu</h3>
+            <p th:text="@{{imageDirectory}+${image.fileName}}">Opis obrazu</p>
+        </li>
+    </ul>
+</div>
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
+

@@ -11,10 +11,12 @@ public class ImageDTO {
     private UUID image_ID;
     private String title;
     private String description;
+    private String fileName;
 
-    public ImageDTO(UUID image_ID, String title, String description) {
+    public ImageDTO(UUID image_ID, String title, String description, String fileName) {
         this.image_ID = image_ID;
         this.title = title;
         this.description = description;
+        this.fileName = fileName;
     }
 }

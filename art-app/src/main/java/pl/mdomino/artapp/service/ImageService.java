@@ -161,7 +161,7 @@ public class ImageService {
     public List<ImageDTO> getRandomImages() {
         return imageRepo.findRandomImages()
                 .stream()
-                .map(image -> new ImageDTO(image.getImage_ID(), image.getTitle(), image.getDescription()))
+                .map(image -> new ImageDTO(image.getImage_ID(), image.getTitle(), image.getDescription(), image.getFileName()))
                 .collect(Collectors.toList());
     }
 
@@ -213,7 +213,7 @@ public class ImageService {
         Collections.shuffle(similarImages);
         return similarImages.stream()
                 .limit(5)
-                .map(img -> new ImageDTO(img.getImage_ID(), img.getTitle(), img.getDescription()))
+                .map(img -> new ImageDTO(img.getImage_ID(), img.getTitle(), img.getDescription(), img.getFileName()))
                 .collect(Collectors.toList());
     }
 
