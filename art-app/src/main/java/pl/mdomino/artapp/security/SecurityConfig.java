@@ -115,6 +115,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests(requests -> {
             requests.requestMatchers("/", "/favicon.ico").permitAll();
             requests.requestMatchers("/test").authenticated();
+            requests.requestMatchers("/admin").hasAuthority("Admin");
             requests.anyRequest().authenticated();
         });
 
