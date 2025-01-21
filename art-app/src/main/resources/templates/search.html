@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Wyniki wyszukiwania</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<h1>Wyniki wyszukiwania</h1>
+
+<form th:action="@{/search}" method="get">
+    <label for="query">Szukanie szczegółowe:</label>
+    <input type="text" id="query" name="q" placeholder="Wyszukaj..." th:value="${query}" />
+
+    <label for="sortBy">Sortuj według:</label>
+    <select name="sortBy" id="sortBy">
+        <option value="title" th:selected="${sortBy == 'title'}">Tytuł</option>
+        <option value="description" th:selected="${sortBy == 'description'}">Opis</option>
+        <option value="uploadDate" th:selected="${sortBy == 'uploadDate'}">Data przesłania</option>
+        <option value="updateDate" th:selected="${sortBy == 'updateDate'}">Data aktualizacji</option>
+        <option value="fileName" th:selected="${sortBy == 'fileName'}">Nazwa pliku</option>
+        <option value="author.username" th:selected="${sortBy == 'author.username'}">Autor</option>
+    </select>
+
+    <div>
+        <span>Kierunek sortowania:</span>
+        <label>
+            <input type="radio" name="ascending" value="true" th:checked="${ascending}">
+            Rosnąco
+        </label>
+        <label>
+            <input type="radio" name="ascending" value="false" th:checked="${!ascending}">
+            Malejąco
+        </label>
+    </div>
+
+    <label for="size">Wyników na stronę:</label>
+    <input type="number" id="size" name="size" min="1" th:value="${size}" />
+
+    <div>
+        <button type="submit">Szukaj</button>
+    </div>
+</form>
+
+<h2>Lista wyników:</h2>
+<ul>
+    <li th:each="image : ${images}">
+        <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image.fileName}}" alt="${image.fileName}">
+        <h3 th:text="${image.title}">Tytuł obrazu</h3>
+        <p th:text="@{'Ścieżka: ' + ${imageDirectory} + ${image.fileName}}">Opis obrazu</p>
+    </li>
+</ul>
+
+<div>
+    <a th:if="${page > 0}"
+       th:href="@{/search(q=${query}, sortBy=${sortBy}, ascending=${ascending}, page=${page - 1}, size=${size})}">
+        <button>Poprzednia strona</button>
+    </a>
+
+    <a th:if="${images.size() == size}"
+       th:href="@{/search(q=${query}, sortBy=${sortBy}, ascending=${ascending}, page=${page + 1}, size=${size})}">
+        <button>Następna strona</button>
+    </a>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
