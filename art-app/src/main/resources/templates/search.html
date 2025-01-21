@@ -44,10 +44,17 @@
 
 <h2>Lista wyników:</h2>
 <ul>
-    <li th:each="image : ${images}">
+    <li th:each="image : ${images}" style="border: 1px solid black; padding: 10px; margin-bottom: 10px;">
         <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image.fileName}}" alt="${image.fileName}">
         <h3 th:text="${image.title}">Tytuł obrazu</h3>
         <p th:text="@{'Ścieżka: ' + ${imageDirectory} + ${image.fileName}}">Opis obrazu</p>
+        <p>
+            Autor:
+            <a th:href="@{/user/{id}(id=${image.author.keycloakID})}" th:text="${image.author.username}">Autor</a>
+        </p>
+        <a th:href="@{/image/{id}(id=${image.image_ID})}">
+            <button type="button">Szczegóły</button>
+        </a>
     </li>
 </ul>
 
