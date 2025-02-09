@@ -12,6 +12,7 @@ import pl.mdomino.artapp.repo.UserRepo;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -80,5 +81,10 @@ public class CommentService {
         commentRepo.deleteById(commentUuid);
 
         return comment.getCommentID();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Comment> getCommentById(UUID commentUuid) {
+        return commentRepo.findById(commentUuid);
     }
 }

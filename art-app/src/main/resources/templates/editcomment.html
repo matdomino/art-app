@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Comment</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<h1>Edit Comment</h1>
+
+<div th:if="${successMessage}" style="background-color: lightgreen; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="background-color: lightcoral; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${errorMessage}"></p>
+</div>
+
+<form th:action="@{/comment/{commentId}/edit(commentId=${comment.commentID})}" method="post">
+    <input type="hidden" name="imageId" th:value="${comment.image.image_ID}"/>
+
+    <label for="commentText">Edit your comment:</label><br>
+    <textarea id="commentText" name="commentText" rows="4" cols="50" required th:text="${comment.commentText}"></textarea><br>
+
+    <button type="submit">Save Changes</button>
+    <a th:href="@{/image/{id}(id=${comment.image.image_ID})}" style="margin-left: 10px;">
+        <button type="button">Cancel</button>
+    </a>
+</form>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
