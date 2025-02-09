@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Image</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<h1>Edit Image</h1>
+
+<form th:action="@{/image/{imageId}/edit(imageId=${image.image_ID})}" method="post" enctype="multipart/form-data">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" th:value="${image.title}" required/><br>
+
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" rows="4" cols="50" required th:text="${image.description}"></textarea><br>
+
+    <label for="file">Replace Image:</label>
+    <input type="file" id="file" name="file"/><br>
+
+    <button type="submit">Save Changes</button>
+    <a th:href="@{/image/{imageId}(imageId=${image.image_ID})}" style="margin-left: 10px;">
+        <button type="button">Cancel</button>
+    </a>
+</form>
+
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

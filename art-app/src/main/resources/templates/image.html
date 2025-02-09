@@ -20,7 +20,7 @@
 <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image['image'].fileName}}" alt="${image['fileName']}">
 
 <th:block th:if="${image['image'].author.keycloakID.toString() == userId}">
-    <form th:action="@{/image/{id}/edit(id=${image['image'].image_ID})}" method="get" style="margin-top: 30px;margin-bottom: 30px;">
+    <form th:action="@{/image/{imageId}/edit(imageId=${image['image'].image_ID})}" method="get" style="margin-top: 30px;margin-bottom: 30px;">
         <button type="submit">Edit image</button>
     </form>
 </th:block>
@@ -31,12 +31,27 @@
     <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${image['image'].author.username}">Autor</a>
 </p>
 
+<th:block th:if="${image['image'].author.keycloakID.toString() == userId}">
+    <h3>Add Tag:</h3>
+    <form th:action="@{/image/{id}/tags/add(id=${image['image'].image_ID})}" method="post">
+        <input type="text" name="tagName" placeholder="Enter tag name" required />
+        <button type="submit">Add Tag</button>
+    </form>
+</th:block>
+
 <th:block th:if="${not #lists.isEmpty(image['image'].tags)}">
-    <p><strong>Tags:</strong>
-        <span th:each="tag, iterStat : ${image['image'].tags}">
-            <span th:text="${tag.tagName}"></span><th:block th:if="${!iterStat.last}">, </th:block>
-        </span>
-    </p>
+    <h3>Tags:</h3>
+    <ul>
+        <li th:each="tag : ${image['image'].tags}">
+            <span th:text="${tag.tagName}"></span>
+            <th:block th:if="${image['image'].author.keycloakID.toString() == userId}">
+                <form th:action="@{/image/{id}/tags/remove(id=${image['image'].image_ID})}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this tag?');">
+                    <input type="hidden" name="tagName" th:value="${tag.tagName}" />
+                    <button type="submit">Remove</button>
+                </form>
+            </th:block>
+        </li>
+    </ul>
 </th:block>
 
 <p th:text="'Upload date: ' + ${#temporals.format(image['image'].uploadDate, 'dd-MM-yyyy HH:mm')}"></p>

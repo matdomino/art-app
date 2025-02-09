@@ -1,6 +1,8 @@
 package pl.mdomino.artapp.web.controller;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.mdomino.artapp.model.Comment;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.dto.ImageDTO;
@@ -24,6 +27,7 @@ import pl.mdomino.artapp.service.ImageService;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -198,4 +202,46 @@ public class WebImageController {
         return new ResponseEntity<>(imageContent, headers, HttpStatus.OK);
     }
 
+    @GetMapping("/image/{imageId}/edit")
+    public String showEditImagePage(@PathVariable UUID imageId, Model model, Authentication auth) {
+        addAuthAttributes(model, auth);
+
+        if (!(auth instanceof OAuth2AuthenticationToken oauth) || !(oauth.getPrincipal() instanceof OidcUser oidc)) {
+            return "redirect:/";
+        }
+
+        UUID userId = UUID.fromString(oidc.getSubject());
+        Image image = imageService.getImageById(imageId).orElse(null);
+
+        if (image != null && image.getAuthor().getKeycloakID().equals(userId)) {
+            model.addAttribute("image", image);
+            return "editimage";
+        }
+        return "redirect:/";
+    }
+
+    @PostMapping("/image/{imageId}/edit")
+    public String editImage(@PathVariable UUID imageId,
+                            @RequestParam(value = "title", required = false) String newTitle,
+                            @RequestParam(value = "description", required = false) String newDescription,
+                            @RequestParam(value = "file", required = false) MultipartFile file,
+                            Authentication auth,
+                            RedirectAttributes redirectAttributes) {
+
+        if (!(auth instanceof OAuth2AuthenticationToken oauth) || !(oauth.getPrincipal() instanceof OidcUser oidc)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized: Unable to get user information.");
+            return "redirect:/image/" + imageId + "/edit";
+        }
+
+        UUID userId = UUID.fromString(oidc.getSubject());
+
+        try {
+            String fileName = imageService.editImage(imageId, file, userId, newTitle, newDescription);
+            redirectAttributes.addFlashAttribute("successMessage", "Saved modified file as " + fileName);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to update image: " + e.getMessage());
+        }
+
+        return "redirect:/image/" + imageId;
+    }
 }

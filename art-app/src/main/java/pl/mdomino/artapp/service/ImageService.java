@@ -287,4 +287,9 @@ public class ImageService {
 
         return result;
     }
+
+    @Transactional(readOnly = true)
+    public Optional<Image> getImageById(UUID imageUuid) {
+        return imageRepo.findById(imageUuid);
+    }
 }
