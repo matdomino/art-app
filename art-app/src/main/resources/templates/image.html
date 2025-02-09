@@ -2,11 +2,82 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Wyniki wyszukiwania</title>
+    <title>Image details</title>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
-<h1>Obraz</h1>
+
+<h1 th:text="${image['image'].title}"></h1>
+<img th:src="@{'http://localhost:8080/api/images/preview/' + ${image['image'].fileName}}" alt="${image['fileName']}">
+
+<th:block th:if="${image['image'].author.keycloakID.toString() == userId}">
+    <form th:action="@{/image/{id}/edit(id=${image['image'].image_ID})}" method="get" style="margin-top: 30px;margin-bottom: 30px;">
+        <button type="submit">Edit image</button>
+    </form>
+</th:block>
+
+<p th:text="'Description: ' + ${image['image'].description}"></p>
+<p>
+    Autor:
+    <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${image['image'].author.username}">Autor</a>
+</p>
+
+<p th:text="'Upload date: ' + ${#temporals.format(image['image'].uploadDate, 'dd-MM-yyyy HH:mm')}"></p>
+<p th:text="'Edit date: ' + ${#temporals.format(image['image'].updateDate, 'dd-MM-yyyy HH:mm')}"></p>
+
+
+<p th:text="'Favourites count: ' + ${image['favoriteCount']}"></p>
+<p th:text="'Rating: ' + ${image['averageRating']}"></p>
+
+<form th:action="@{/image/{id}/comment(id=${image['image'].image_ID})}" method="post" style="margin-top: 30px;margin-bottom: 30px;">
+    <label for="comment">Add comment:</label>
+    <textarea id="comment" name="commentText" rows="4" cols="50" required></textarea>
+    <br>
+    <button type="submit">Add comment</button>
+</form>
+
+<form th:action="@{/image/{id}/rate(id=${image['image'].image_ID})}" method="post" style="margin-bottom: 30px;">
+    <label for="rating">Rate image:</label>
+    <select id="rating" name="rating" required>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+    <button type="submit">Rate</button>
+</form>
+
+<form th:action="@{/image/{id}/favorite(id=${image['image'].image_ID})}" method="post" style="margin-bottom: 30px;">
+    <button type="submit">Add to favourites</button>
+</form>
+
+<div th:if="${not #lists.isEmpty(comments)}">
+    <h3>Comments: </h3>
+    <ul>
+        <li th:each="comment : ${comments}" style="margin-bottom: 30px; margin-top: 30px">
+            <h4>
+                Author:
+                <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${comment.author.username}"></a>
+            </h4>
+            <p th:text="${comment.commentText}"></p>
+            <p th:text="'Upload date: ' + ${#temporals.format(comment.createDate, 'dd-MM-yyyy HH:mm')}"></p>
+        </li>
+    </ul>
+</div>
+
+<div th:if="${not #lists.isEmpty(suggestions)}">
+    <h3>Suggestions:</h3>
+    <ul style="list-style-type: none; padding: 0; display: flex; flex-wrap: wrap;">
+        <li th:each="suggestion : ${suggestions}" style="margin: 5px;">
+            <a th:href="@{/image/{id}(id=${suggestion.image_ID})}">
+                <img th:src="@{'http://localhost:8080/api/images/preview/' + ${suggestion.fileName}}"
+                     th:alt="${suggestion.title}"
+                     style="width: 150px; height: auto; display: block;">
+            </a>
+        </li>
+    </ul>
+</div>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>

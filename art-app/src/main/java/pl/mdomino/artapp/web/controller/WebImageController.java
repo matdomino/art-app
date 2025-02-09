@@ -1,44 +1,59 @@
 package pl.mdomino.artapp.web.controller;
 
+
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import pl.mdomino.artapp.model.Comment;
 import pl.mdomino.artapp.model.Image;
 import pl.mdomino.artapp.model.dto.ImageDTO;
+import pl.mdomino.artapp.service.CommentService;
 import pl.mdomino.artapp.service.ImageService;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 
 @Controller
 public class WebImageController {
+
     private final ImageService imageService;
+    private final CommentService commentService;
 
     @Autowired
-    public WebImageController(ImageService imageService) {
+    public WebImageController(ImageService imageService, CommentService commentService) {
         this.imageService = imageService;
+        this.commentService = commentService;
+    }
+
+    private void addAuthAttributes(Model model, Authentication auth) {
+        String username = "";
+        String userId = "";
+        boolean isAdmin = false;
+
+        if (auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc) {
+            username = oidc.getPreferredUsername();
+            userId = oidc.getSubject();
+            isAdmin = auth.getAuthorities().stream()
+                    .anyMatch(authority -> "Admin".equals(authority.getAuthority()));
+        }
+
+        model.addAttribute("name", username);
+        model.addAttribute("userId", userId);
+        model.addAttribute("isAuthenticated", auth != null && auth.isAuthenticated());
+        model.addAttribute("isAdmin", isAdmin);
     }
 
     @GetMapping("/")
     public String getIndex(Model model, Authentication auth) {
-        model.addAttribute("name",
-                auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc
-                        ? oidc.getPreferredUsername()
-                        : "");
-        model.addAttribute("isAuthenticated",
-                auth != null && auth.isAuthenticated());
-        model.addAttribute("isAdmin",
-                auth != null && auth.getAuthorities().stream().anyMatch(authority -> {
-                    return Objects.equals("Admin", authority.getAuthority());
-                }));
+        addAuthAttributes(model, auth);
 
         List<ImageDTO> randomImages = imageService.getRandomImages();
         model.addAttribute("randomImages", randomImages);
@@ -48,12 +63,8 @@ public class WebImageController {
 
     @GetMapping("/admin")
     public String adminPage(Model model, Authentication auth) {
-        model.addAttribute("name",
-                auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc
-                        ? oidc.getPreferredUsername()
-                        : "");
-        model.addAttribute("isAuthenticated",
-                auth != null && auth.isAuthenticated());
+        addAuthAttributes(model, auth);
+
         return "admin.html";
     }
 
@@ -64,14 +75,9 @@ public class WebImageController {
                          @RequestParam(defaultValue = "0") int page,
                          @RequestParam(defaultValue = "10") int size,
                          Model model, Authentication auth) {
-        model.addAttribute("name",
-                auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc
-                        ? oidc.getPreferredUsername()
-                        : "");
-        model.addAttribute("isAuthenticated",
-                auth != null && auth.isAuthenticated());
-        model.addAttribute("query", query);
+        addAuthAttributes(model, auth);
 
+        model.addAttribute("query", query);
         model.addAttribute("ascending", ascending);
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("page", page);
@@ -88,11 +94,7 @@ public class WebImageController {
     public String topImages(@RequestParam(defaultValue = "favourites") String sortBy,
                             @RequestParam(defaultValue = "10") int limit,
                             Model model, Authentication auth) {
-        model.addAttribute("name",
-                auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc
-                        ? oidc.getPreferredUsername()
-                        : "");
-        model.addAttribute("isAuthenticated", auth != null && auth.isAuthenticated());
+        addAuthAttributes(model, auth);
 
         List<Map<String, Object>> topImages;
         if (limit > 0) {
@@ -105,14 +107,10 @@ public class WebImageController {
                 return "topimages.html";
             }
 
-            System.out.println("Zawartość topImages:");
-            topImages.forEach(image -> System.out.println(image));
-
             model.addAttribute("topImages", topImages);
         } else {
             model.addAttribute("error", "Limit musi być większy niż 0");
         }
-
 
         model.addAttribute("sortBy", sortBy);
         model.addAttribute("limit", limit);
@@ -122,16 +120,52 @@ public class WebImageController {
 
     @GetMapping("/image/{id}")
     public String image(@PathVariable("id") UUID id, Model model, Authentication auth) {
-        model.addAttribute("name",
-                auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc
-                        ? oidc.getPreferredUsername()
-                        : "");
-        model.addAttribute("isAuthenticated", auth != null && auth.isAuthenticated());
+        addAuthAttributes(model, auth);
 
         Map<String, Object> imageDetails = imageService.getImageDetails(id);
+        List<ImageDTO> suggestions = imageService.getSuggestions(id);
+        List<Comment> comments = commentService.getComments(id);
 
         model.addAttribute("image", imageDetails);
+        model.addAttribute("suggestions", suggestions);
+        model.addAttribute("comments", comments);
 
         return "image.html";
+    }
+
+    @GetMapping("/upload")
+    public String uploadImagePage(Model model, Authentication auth) {
+        addAuthAttributes(model, auth);
+
+        model.addAttribute("image", new Image());
+        return "upload.html";
+    }
+
+    @PostMapping("/upload")
+    public String uploadImage(@Valid @ModelAttribute("image") Image image,
+                              BindingResult bindingResult,
+                              @RequestParam("file") MultipartFile file,
+                              Authentication auth,
+                              Model model) {
+        addAuthAttributes(model, auth);
+
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("errorMessage", "Validation failed: " + bindingResult.getAllErrors());
+            return "upload.html";
+        }
+
+        if (auth instanceof OAuth2AuthenticationToken oauth && oauth.getPrincipal() instanceof OidcUser oidc) {
+            try {
+                UUID userId = UUID.fromString(oidc.getSubject());
+                imageService.addImage(image, file, userId);
+                model.addAttribute("successMessage", "Image uploaded successfully!");
+            } catch (Exception e) {
+                model.addAttribute("errorMessage", "Upload failed: " + e.getMessage());
+            }
+        } else {
+            model.addAttribute("errorMessage", "Unauthorized: Unable to get user information.");
+        }
+
+        return "upload.html";
     }
 }

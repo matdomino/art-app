@@ -14,19 +14,26 @@
                                                                  class="btn btn-lg btn-primary btn-block">Login</button></a>
             </div>
             <div th:if="${isAuthenticated}">
-                <p>User: <span th:utext="${name}">..!..</span></p>
+<!--                <p>User: <span th:utext="${name}"></span></p>-->
+                <a th:href="@{/user/{id}(id=${userId})}" th:text="${name}"></a>
                 <a href="/logout"><button type="button" class="btn btn-lg btn-primary">Logout</button></a>
             </div>
         </fieldset>
         <fieldset>
             <form th:action="@{/search}" method="get">
-                <label for="query">Wyszukaj:</label>
-                <input type="text" id="query" name="q" placeholder="Szukaj..." />
-                <button type="submit">Szukaj</button>
+                <label for="query">Search images:</label>
+                <input type="text" id="query" name="q" placeholder="input a phrase..." />
+                <button type="submit">Search</button>
             </form>
         </fieldset>
         <fieldset>
             <a href="/topimages"><span>Top images</span></a>
+        </fieldset>
+        <fieldset>
+            <a href="/favourites"><span>Favourites</span></a>
+        </fieldset>
+        <fieldset>
+            <a href="/upload"><span>Upload image</span></a>
         </fieldset>
     </div>
 </header>
