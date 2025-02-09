@@ -2,23 +2,23 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Najlepsze obrazy</title>
+    <title>Top images</title>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
-<h1>Najlepsze obrazy</h1>
+<h1>Top images</h1>
 
 <form th:action="@{/topimages}" method="get">
-    <label for="sortBy">Sortuj według:</label>
+    <label for="sortBy">Sort by:</label>
     <select id="sortBy" name="sortBy">
-        <option value="favourites" th:selected="${sortBy == 'favourites'}">Ulubione</option>
-        <option value="ratings" th:selected="${sortBy == 'ratings'}">Oceny</option>
+        <option value="favourites" th:selected="${sortBy == 'favourites'}">Favourites</option>
+        <option value="ratings" th:selected="${sortBy == 'ratings'}">Ratings</option>
     </select>
 
-    <label for="limit">Liczba wyników:</label>
+    <label for="limit">Number of results:</label>
     <input type="number" id="limit" name="limit" min="1" th:value="${limit}" />
 
-    <button type="submit">Pokaż</button>
+    <button type="submit">Show</button>
 </form>
 
 <p th:if="${error}" th:text="${error}" style="color: red;"></p>
@@ -27,16 +27,16 @@
     <ul>
         <li th:each="image : ${topImages}" style="border: 1px solid black; padding: 10px; margin-bottom: 10px;">
             <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image['image'].fileName}}" alt="${image['fileName']}">
-            <h3 th:text="${image['image'].title}">Tytuł obrazu</h3>
-            <p th:text="'Opis: ' + ${image['image'].description}">Ulubione: </p>
+            <h3 th:text="${image['image'].title}">Image title</h3>
+            <p th:text="'Description: ' + ${image['image'].description}">Description: </p>
             <p>
-                Autor:
-                <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${image['image'].author.username}">Autor</a>
+                Author:
+                <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${image['image'].author.username}">Author</a>
             </p>
-            <p th:text="'Ilość polubień: ' + ${image['favoriteCount']}">Ulubione: </p>
-            <p th:text="'Ocena: ' + ${image['averageRating']}">Ocena: </p>
+            <p th:text="'Favourites count: ' + ${image['favoriteCount']}">Favourites: </p>
+            <p th:text="'Rating: ' + ${image['averageRating']}">Rating: </p>
             <a th:href="@{/image/{id}(id=${image['image'].image_ID})}">
-                <button type="button">Szczegóły</button>
+                <button type="button">Details</button>
             </a>
         </li>
     </ul>

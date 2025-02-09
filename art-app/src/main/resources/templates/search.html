@@ -2,58 +2,58 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Wyniki wyszukiwania</title>
+    <title>Search results</title>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
-<h1>Wyniki wyszukiwania</h1>
+<h1>Search results</h1>
 
 <form th:action="@{/search}" method="get">
-    <label for="query">Szukanie szczegółowe:</label>
-    <input type="text" id="query" name="q" placeholder="Wyszukaj..." th:value="${query}" />
+    <label for="query">Advanced searching:</label>
+    <input type="text" id="query" name="q" placeholder="Input a phrase..." th:value="${query}" />
 
-    <label for="sortBy">Sortuj według:</label>
+    <label for="sortBy">Sort by:</label>
     <select name="sortBy" id="sortBy">
-        <option value="title" th:selected="${sortBy == 'title'}">Tytuł</option>
-        <option value="description" th:selected="${sortBy == 'description'}">Opis</option>
-        <option value="uploadDate" th:selected="${sortBy == 'uploadDate'}">Data przesłania</option>
-        <option value="updateDate" th:selected="${sortBy == 'updateDate'}">Data aktualizacji</option>
-        <option value="fileName" th:selected="${sortBy == 'fileName'}">Nazwa pliku</option>
-        <option value="author.username" th:selected="${sortBy == 'author.username'}">Autor</option>
+        <option value="title" th:selected="${sortBy == 'title'}">Title</option>
+        <option value="description" th:selected="${sortBy == 'description'}">Description</option>
+        <option value="uploadDate" th:selected="${sortBy == 'uploadDate'}">Upload date</option>
+        <option value="updateDate" th:selected="${sortBy == 'updateDate'}">Edit date</option>
+        <option value="fileName" th:selected="${sortBy == 'fileName'}">Filename</option>
+        <option value="author.username" th:selected="${sortBy == 'author.username'}">Author</option>
     </select>
 
     <div>
-        <span>Kierunek sortowania:</span>
+        <span>Search direction:</span>
         <label>
             <input type="radio" name="ascending" value="true" th:checked="${ascending}">
-            Rosnąco
+            Ascending
         </label>
         <label>
             <input type="radio" name="ascending" value="false" th:checked="${!ascending}">
-            Malejąco
+            Descending
         </label>
     </div>
 
-    <label for="size">Wyników na stronę:</label>
+    <label for="size">Results per page:</label>
     <input type="number" id="size" name="size" min="1" th:value="${size}" />
 
     <div>
-        <button type="submit">Szukaj</button>
+        <button type="submit">Search</button>
     </div>
 </form>
 
-<h2>Lista wyników:</h2>
+<h2>Results list:</h2>
 <ul>
     <li th:each="image : ${images}" style="border: 1px solid black; padding: 10px; margin-bottom: 10px;">
         <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image.fileName}}" alt="${image.fileName}">
-        <h3 th:text="${image.title}">Tytuł obrazu</h3>
-        <p th:text="@{'Ścieżka: ' + ${imageDirectory} + ${image.fileName}}">Opis obrazu</p>
+        <h3 th:text="${image.title}">Image title</h3>
+        <p th:text="@{'Ścieżka: ' + ${imageDirectory} + ${image.fileName}}">Image description</p>
         <p>
             Autor:
-            <a th:href="@{/user/{id}(id=${image.author.keycloakID})}" th:text="${image.author.username}">Autor</a>
+            <a th:href="@{/user/{id}(id=${image.author.keycloakID})}" th:text="${image.author.username}">Author</a>
         </p>
         <a th:href="@{/image/{id}(id=${image.image_ID})}">
-            <button type="button">Szczegóły</button>
+            <button type="button">Description</button>
         </a>
     </li>
 </ul>

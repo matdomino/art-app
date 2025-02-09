@@ -2,11 +2,36 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Wyniki wyszukiwania</title>
+    <title>User page</title>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
-<h1>User</h1>
+<h1 th:text="${user['username']}"></h1>
+
+<div th:if="${successMessage}" style="background-color: lightgreen; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="background-color: lightcoral; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${errorMessage}"></p>
+</div>
+<th:block th:if="${user['profileSummary'] != null}">
+    <h3 th:text="'Summary: ' + ${user['profileSummary']}"></h3>
+</th:block>
+
+<h4 th:text="'Created at: ' + ${#temporals.format(user['createdAt'], 'dd-MM-yyyy HH:mm')}"></h4>
+
+<th:block th:if="${user['keycloakID'].toString() == userId}">
+    <form th:action="@{/user/{id}/edit(id=${user.keycloakID})}" method="post" th:object="${user}">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" th:field="*{username}" required/>
+
+        <label for="profileSummary">Summary:</label>
+        <textarea id="profileSummary" name="profileSummary" th:field="*{profileSummary}" required></textarea>
+
+        <button type="submit">Save changes</button>
+    </form>
+</th:block>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
