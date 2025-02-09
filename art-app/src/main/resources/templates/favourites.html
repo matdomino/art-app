@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Favourites</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+<h1>Favourite Images</h1>
+
+<div th:if="${successMessage}" style="background-color: lightgreen; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="background-color: lightcoral; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${errorMessage}"></p>
+</div>
+
+<div>
+    <ul>
+        <li th:each="image : ${favorites}" style="border: 1px solid black; padding: 10px; margin-bottom: 10px;">
+            <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image.image.fileName}}" alt="${image.image.fileName}">
+            <h3 th:text="${image.image.title}">Tytuł obrazu</h3>
+            <p th:text="${image.image.description}">Opis obrazu</p>
+            <a th:href="@{/image/{id}(id=${image.image.image_ID})}">
+                <button type="button">Details</button>
+            </a>
+            <form th:action="@{/image/{id}/unfavorite(id=${image.image.image_ID})}" method="post" style="display: inline;">
+                <button type="submit" style="adding: 5px 10px; cursor: pointer;">Delete from favourites</button>
+            </form>
+        </li>
+    </ul>
+</div>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

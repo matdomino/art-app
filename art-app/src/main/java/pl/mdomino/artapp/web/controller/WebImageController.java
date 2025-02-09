@@ -3,6 +3,10 @@ package pl.mdomino.artapp.web.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -17,6 +21,9 @@ import pl.mdomino.artapp.model.dto.ImageDTO;
 import pl.mdomino.artapp.service.CommentService;
 import pl.mdomino.artapp.service.ImageService;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -168,4 +175,27 @@ public class WebImageController {
 
         return "upload.html";
     }
+
+    @GetMapping("/image/download/{imageName}")
+    public ResponseEntity<?> downloadImage(@PathVariable String imageName, Authentication auth) throws IOException {
+        if (auth == null || !auth.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized: You must be logged in to download images.");
+        }
+
+        Path imagePath = imageService.getImageByFilePath(imageName);
+
+        if (!Files.exists(imagePath)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found.");
+        }
+
+        byte[] imageContent = Files.readAllBytes(imagePath);
+        String contentType = Files.probeContentType(imagePath);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"));
+        headers.setContentDispositionFormData("attachment", imagePath.getFileName().toString());
+
+        return new ResponseEntity<>(imageContent, headers, HttpStatus.OK);
+    }
+
 }

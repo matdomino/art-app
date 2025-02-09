@@ -8,6 +8,15 @@
 <header th:replace="~{fragments/header :: header}"></header>
 
 <h1 th:text="${image['image'].title}"></h1>
+
+<div th:if="${successMessage}" style="background-color: lightgreen; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="background-color: lightcoral; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${errorMessage}"></p>
+</div>
+
 <img th:src="@{'http://localhost:8080/api/images/preview/' + ${image['image'].fileName}}" alt="${image['fileName']}">
 
 <th:block th:if="${image['image'].author.keycloakID.toString() == userId}">
@@ -21,6 +30,14 @@
     Autor:
     <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${image['image'].author.username}">Autor</a>
 </p>
+
+<th:block th:if="${not #lists.isEmpty(image['image'].tags)}">
+    <p><strong>Tags:</strong>
+        <span th:each="tag, iterStat : ${image['image'].tags}">
+            <span th:text="${tag.tagName}"></span><th:block th:if="${!iterStat.last}">, </th:block>
+        </span>
+    </p>
+</th:block>
 
 <p th:text="'Upload date: ' + ${#temporals.format(image['image'].uploadDate, 'dd-MM-yyyy HH:mm')}"></p>
 <p th:text="'Edit date: ' + ${#temporals.format(image['image'].updateDate, 'dd-MM-yyyy HH:mm')}"></p>
@@ -50,6 +67,14 @@
 
 <form th:action="@{/image/{id}/favorite(id=${image['image'].image_ID})}" method="post" style="margin-bottom: 30px;">
     <button type="submit">Add to favourites</button>
+</form>
+
+<form th:action="@{'http://localhost:8080/api/images/preview/' + ${image['image'].fileName}}" method="get" target="_blank" style="margin-bottom: 30px;">
+    <button type="submit">Open Preview</button>
+</form>
+
+<form th:action="@{'/image/download/' + ${image['image'].fileName}}" method="get" style="margin-bottom: 30px;">
+    <button type="submit">Download Image</button>
 </form>
 
 <div th:if="${not #lists.isEmpty(comments)}">
