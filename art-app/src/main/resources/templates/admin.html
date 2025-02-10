@@ -1,11 +1,19 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Galeria</title>
+    <title>Admin panel</title>
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
+
 <h1>Admin panel</h1>
+
+<form action="/admin/export/csv" method="get">
+    <button type="submit">Export data</button>
+</form>
+
+
+
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

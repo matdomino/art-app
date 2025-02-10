@@ -68,13 +68,6 @@ public class WebImageController {
         return "home.html";
     }
 
-    @GetMapping("/admin")
-    public String adminPage(Model model, Authentication auth) {
-        addAuthAttributes(model, auth);
-
-        return "admin.html";
-    }
-
     @GetMapping("/search")
     public String search(@RequestParam("q") String query,
                          @RequestParam(defaultValue = "uploadDate") String sortBy,
