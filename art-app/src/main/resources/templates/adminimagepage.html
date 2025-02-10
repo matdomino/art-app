@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Image Details</title>
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<h1 th:text="${image['image'].title}"></h1>
+
+<div th:if="${successMessage}" style="background-color: lightgreen; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${successMessage}"></p>
+</div>
+
+<div th:if="${errorMessage}" style="background-color: lightcoral; padding: 10px; margin-bottom: 20px;">
+    <p th:text="${errorMessage}"></p>
+</div>
+
+<img th:src="@{'http://localhost:8080/api/images/preview/' + ${image['image'].fileName}}" alt="${image['fileName']}">
+
+<h3>Image Actions:</h3>
+<form th:action="@{/admin/image/{id}/delete(id=${image['image'].image_ID})}" method="post"
+      onsubmit="return confirm('Are you sure you want to delete this image?');">
+    <button type="submit">Delete Image</button>
+</form>
+
+<p th:text="'Description: ' + ${image['image'].description}"></p>
+<p>
+    Author:
+    <a th:href="@{/user/{id}(id=${image['image'].author.keycloakID})}" th:text="${image['image'].author.username}">Autor</a>
+</p>
+
+<h3>Tags:</h3>
+<ul>
+    <li th:each="tag : ${image['image'].tags}">
+        <span th:text="${tag.tagName}"></span>
+        <form th:action="@{/admin/image/{id}/tag/delete(id=${image['image'].image_ID})}" method="post" style="display: inline;"
+              onsubmit="return confirm('Are you sure you want to delete this tag?');">
+            <input type="hidden" name="tagName" th:value="${tag.tagName}"/>
+            <button type="submit">Remove</button>
+        </form>
+    </li>
+</ul>
+
+<p th:text="'Upload date: ' + ${#temporals.format(image['image'].uploadDate, 'dd-MM-yyyy HH:mm')}"></p>
+<p th:text="'Edit date: ' + ${#temporals.format(image['image'].updateDate, 'dd-MM-yyyy HH:mm')}"></p>
+
+<h3>Comments:</h3>
+<ul>
+    <li th:each="comment : ${comments}" style="margin-bottom: 30px; margin-top: 30px">
+        <h4>
+            Author:
+            <a th:href="@{/user/{id}(id=${comment.author.keycloakID})}" th:text="${comment.author.username}"></a>
+        </h4>
+        <p th:text="${comment.commentText}"></p>
+        <p th:text="'Upload date: ' + ${#temporals.format(comment.createDate, 'dd-MM-yyyy HH:mm')}"></p>
+
+        <form th:action="@{/admin/comment/{commentId}/delete(commentId=${comment.commentID})}" method="post"
+              onsubmit="return confirm('Are you sure you want to delete this comment?');">
+            <input type="hidden" name="imageId" th:value="${image['image'].image_ID}"/>
+            <button type="submit">Delete</button>
+        </form>
+    </li>
+</ul>
+
+<h3>Suggestions:</h3>
+<ul style="list-style-type: none; padding: 0; display: flex; flex-wrap: wrap;">
+    <li th:each="suggestion : ${suggestions}" style="margin: 5px;">
+        <a th:href="@{/image/{id}(id=${suggestion.image_ID})}">
+            <img th:src="@{'http://localhost:8080/api/images/preview/' + ${suggestion.fileName}}"
+                 th:alt="${suggestion.title}"
+                 style="width: 150px; height: auto; display: block;">
+        </a>
+    </li>
+</ul>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>
