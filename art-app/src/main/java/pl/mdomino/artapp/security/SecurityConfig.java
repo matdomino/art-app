@@ -21,6 +21,8 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.stereotype.Component;
+import pl.mdomino.artapp.repo.UserRepo;
 
 import java.util.Collection;
 import java.util.List;
@@ -37,6 +39,7 @@ public class SecurityConfig {
 
     private final JvtAuthConverter jvtAuthConverter = new JvtAuthConverter();
     private final RequestFilter requestFilter;
+    private final UserInitializationFilter userInitializationFilter;
 
     @Bean
     @Order(1)
@@ -111,6 +114,8 @@ public class SecurityConfig {
                     response.sendRedirect("/");
                 })
         );
+
+        http.addFilterAfter(userInitializationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         http.authorizeHttpRequests(requests -> {
             requests.requestMatchers("/", "/favicon.ico").permitAll();
